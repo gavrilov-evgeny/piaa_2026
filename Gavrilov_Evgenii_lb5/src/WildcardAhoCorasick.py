@@ -15,17 +15,17 @@ class TrieNode:
 
 class Trie:
     """Trie class"""
-    def __init__(self, words: List[str] = []) -> None:
+    def __init__(self, patterns: List[str] = []) -> None:
         self.root = TrieNode()
         self.patternLen: int = 0
-        self.wordCount: int = 0
-        if words:
-            self.buildTrie(words)
+        self.patternCount: int = 0
+        if patterns:
+            self.buildTrie(patterns)
 
-    def buildTrie(self, words: List[str]) -> None:
-        """Build trie with Aho-Corasick automaton from a list of words"""
-        for index, word in enumerate(words):
-            self._add_word(word, index)
+    def buildTrie(self, patterns: List[str]) -> None:
+        """Build trie with Aho-Corasick automaton from a list of patterns"""
+        for index, pattern in enumerate(patterns):
+            self._add_pattern(pattern, index)
         self._build_automaton()
 
     def buildFromPattern(self, pattern: str, wildcard: str) -> None:
@@ -34,12 +34,12 @@ class Trie:
         parts = pattern.split(wildcard)
 
         self.patternLen = len(pattern)
-        self.wordCount = sum(1 for part in parts if part)
+        self.patternCount = sum(1 for part in parts if part)
 
         pos = 0
         for part in parts:
             if part:
-                self._add_word(part, pos)
+                self._add_pattern(part, pos)
             pos += len(part) + len(wildcard)
 
         self._build_automaton()
@@ -89,12 +89,12 @@ class Trie:
                 if node is not None and node is not self.root:
                     print(f"    Following exit link to id={id(node)}")
 
-        print("\nChecking accumulated match counts against required word count "
-              f"({self.wordCount}):")
+        print("\nChecking accumulated match counts against required pattern count "
+              f"({self.patternCount}):")
         result = []
         for i in range(1, len(text) + 1):
             print(f"  Position {i}: match_count={match_count[i]}")
-            if match_count[i] == self.wordCount:
+            if match_count[i] == self.patternCount:
                 print(f"    -> Position {i} matches full pattern")
                 result.append(i)
 
@@ -102,23 +102,23 @@ class Trie:
 
         return result
 
-    def _add_word(self, word: str, wordStart: int) -> None:
-        """Add one word to Aho-Corasick trie"""
-        print(f"Adding word: {word}, word start: {wordStart}")
-        print(f"\nTrie before adding {word}:")
+    def _add_pattern(self, pattern: str, patternStart: int) -> None:
+        """Add one pattern to Aho-Corasick trie"""
+        print(f"Adding pattern: {pattern}, pattern start: {patternStart}")
+        print(f"\nTrie before adding {pattern}:")
         self._print_trie()
 
         current = self.root
-        for char in word:
-            print(f"Adding char: {char} from the word that we are adding")
+        for char in pattern:
+            print(f"Adding char: {char} from the pattern that we are adding")
             if char not in current.children:
                 current.children[char] = TrieNode()
             current = current.children[char]
         current.isTerminal = True
-        current.patternLen = len(word)
-        current.patternStarts.append(wordStart)
+        current.patternLen = len(pattern)
+        current.patternStarts.append(patternStart)
 
-        print(f"\nTrie after adding {word}:")
+        print(f"\nTrie after adding {pattern}:")
         self._print_trie()
 
     def _build_automaton(self) -> None:

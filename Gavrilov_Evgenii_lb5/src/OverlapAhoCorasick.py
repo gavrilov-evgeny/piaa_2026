@@ -10,21 +10,21 @@ class TrieNode:
         self.children: dict[str, TrieNode] = {}
         self.suff: TrieNode | None = None
         self.exit: TrieNode | None = None
-        self.wordLen: int | None = None
-        self.wordIndex: int | None = None
+        self.patternLen: int | None = None
+        self.patternIndex: int | None = None
 
 class Trie:
     """Trie class"""
-    def __init__(self, words: List[str] = []) -> None:
+    def __init__(self, patterns: List[str] = []) -> None:
         self.root = TrieNode()
-        self.wordLens: dict[int, int] = {}
-        if words:
-            self.buildTrie(words)
+        self.patternLens: dict[int, int] = {}
+        if patterns:
+            self.buildTrie(patterns)
 
-    def buildTrie(self, words: List[str]) -> None:
-        """Build trie with Aho-Corasick automaton from a list of words"""
-        for index, word in enumerate(words):
-            self._add_word(word, index)
+    def buildTrie(self, patterns: List[str]) -> None:
+        """Build trie with Aho-Corasick automaton from a list of patterns"""
+        for index, pattern in enumerate(patterns):
+            self._add_pattern(pattern, index)
         self._build_automaton()
 
     def countNodes(self) -> int:
@@ -58,16 +58,16 @@ class Trie:
         overlapping: List[Tuple[int, int]] = []
 
         for idx, (pos, patternIndex) in enumerate(matches):
-            wordLen = self.wordLens[patternIndex - 1]
+            patternLen = self.patternLens[patternIndex - 1]
             start = pos
-            end = pos + wordLen - 1
+            end = pos + patternLen - 1
             print(f"\n  Checking pattern {patternIndex} at position {pos} (occupies [{start}, {end}])")
 
             has_overlap = False
             for other_idx, (other_pos, other_patternIndex) in enumerate(matches):
                 if other_idx == idx:
                     continue
-                other_len = self.wordLens[other_patternIndex - 1]
+                other_len = self.patternLens[other_patternIndex - 1]
                 other_start = other_pos
                 other_end = other_pos + other_len - 1
 
@@ -119,20 +119,20 @@ class Trie:
 
             # check for matches at current node
             if current.isTerminal:
-                start_pos = i - current.wordLen + 2
-                print(f"  MATCH FOUND at current node! wordIndex={current.wordIndex}, wordLen={current.wordLen}")
-                print(f"    Start position: {start_pos}, Pattern index: {current.wordIndex + 1}")
-                result.append((start_pos, current.wordIndex + 1))
+                start_pos = i - current.patternLen + 2
+                print(f"  MATCH FOUND at current node! patternIndex={current.patternIndex}, patternLen={current.patternLen}")
+                print(f"    Start position: {start_pos}, Pattern index: {current.patternIndex + 1}")
+                result.append((start_pos, current.patternIndex + 1))
 
             # check exit links
             temp = current.exit
             if temp is not None:
                 print(f"  Checking exit links from id={id(current)}")
             while temp is not None:
-                start_pos = i - temp.wordLen + 2
-                print(f"  EXIT LINK MATCH! wordIndex={temp.wordIndex}, wordLen={temp.wordLen}")
-                print(f"    Start position: {start_pos}, Pattern index: {temp.wordIndex + 1}")
-                result.append((start_pos, temp.wordIndex + 1))
+                start_pos = i - temp.patternLen + 2
+                print(f"  EXIT LINK MATCH! patternIndex={temp.patternIndex}, patternLen={temp.patternLen}")
+                print(f"    Start position: {start_pos}, Pattern index: {temp.patternIndex + 1}")
+                result.append((start_pos, temp.patternIndex + 1))
                 temp = temp.exit
                 if temp is not None:
                     print(f"    Following next exit link to id={id(temp)}")
@@ -141,24 +141,24 @@ class Trie:
 
         return result
 
-    def _add_word(self, word: str, wordIndex: int) -> None:
-        """Add one word to Aho-Corasick trie"""
-        print(f"Adding word: {word}, word index: {wordIndex}")
-        print(f"\nTrie before adding {word}:")
+    def _add_pattern(self, pattern: str, patternIndex: int) -> None:
+        """Add one pattern to Aho-Corasick trie"""
+        print(f"Adding pattern: {pattern}, pattern index: {patternIndex}")
+        print(f"\nTrie before adding {pattern}:")
         self._print_trie()
 
         current = self.root
-        for char in word:
-            print(f"Adding char: {char} from the word that we are adding")
+        for char in pattern:
+            print(f"Adding char: {char} from the pattern that we are adding")
             if char not in current.children:
                 current.children[char] = TrieNode()
             current = current.children[char]
         current.isTerminal = True
-        current.wordLen = len(word)
-        current.wordIndex = wordIndex
-        self.wordLens[wordIndex] = len(word)
+        current.patternLen = len(pattern)
+        current.patternIndex = patternIndex
+        self.patternLens[patternIndex] = len(pattern)
 
-        print(f"\nTrie after adding {word}:")
+        print(f"\nTrie after adding {pattern}:")
         self._print_trie()
 
     def _build_automaton(self) -> None:
@@ -177,7 +177,7 @@ class Trie:
 
         while queue:
             current = queue.popleft()
-            print(f"\nProcessing node id={id(current)} (isTerminal={current.isTerminal}, wordIndex={current.wordIndex})")
+            print(f"\nProcessing node id={id(current)} (isTerminal={current.isTerminal}, patternIndex={current.patternIndex})")
 
             for char, child in current.children.items():
                 print(f"  Processing child '{char}' (id={id(child)}) of node id={id(current)}")
@@ -228,7 +228,7 @@ class Trie:
 
             desc = f"  {wid}: '{label}' | path='{path}'"
             if node.isTerminal:
-                desc += f" | TERMINAL (wordIndex={node.wordIndex}, len={node.wordLen})"
+                desc += f" | TERMINAL (patternIndex={node.patternIndex}, len={node.patternLen})"
             desc += f" | suff: {id(node.suff)}"
             if node.exit is not None:
                 desc += f" | exit: {id(node.exit)}"
@@ -243,8 +243,8 @@ class Trie:
 def main():
     text = input()
     n = int(input())
-    words = [input() for _ in range(n)]
-    trie = Trie(words)
+    patterns = [input() for _ in range(n)]
+    trie = Trie(patterns)
 
     node_count = trie.countNodes()
     print(f"Number of automaton vertices: {node_count}")
