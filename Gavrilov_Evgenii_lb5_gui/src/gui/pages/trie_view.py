@@ -1,4 +1,5 @@
 import math
+from algo.AhoCorasick import TrieNode
 
 from PySide6.QtCore import QPointF, Qt
 from PySide6.QtGui import (
@@ -76,7 +77,7 @@ class TrieView(QWidget):
 
     def set_trie(self, trie) -> None:
         self.scene.clear()
-        positions: dict[object, QPointF] = {}
+        positions: dict[TrieNode, QPointF] = {}
         next_leaf = 0
 
         def place(node, depth: int) -> float:
